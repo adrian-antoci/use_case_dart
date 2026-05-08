@@ -7,4 +7,7 @@
 ## 1.0.2
 - Improved example.
 
+## 1.0.3
+- Improved code structure
+
 

@@ -1,6 +1,6 @@
 name: use_case_dart
 description: A pure-Dart use case result wrapper that funnels thrown errors into typed success/failure values. Zero dependencies.
-version: 1.0.2
+version: 1.0.3
 repository: https://github.com/adrian-antoci/use_case_dart
 
 environment:

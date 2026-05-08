@@ -13,27 +13,21 @@ sealed class UseCase<T> {
 
   /// The success value. Throws [StateError] on a failure.
   T get result => switch (this) {
-        UseCaseSuccess(:final value) => value,
-        UseCaseFailure() =>
-          throw StateError('UseCase.result called on a failure'),
-      };
+    UseCaseSuccess(:final value) => value,
+    UseCaseFailure() => throw StateError('UseCase.result called on a failure'),
+  };
 
   /// The failure exception. Throws [StateError] on a success.
   UseCaseException get exception => switch (this) {
-        UseCaseFailure(:final value) => value,
-        UseCaseSuccess() =>
-          throw StateError('UseCase.exception called on a success'),
-      };
+    UseCaseFailure(:final value) => value,
+    UseCaseSuccess() => throw StateError('UseCase.exception called on a success'),
+  };
 
   /// Folds both branches into a single value.
-  R fold<R>(
-    R Function(UseCaseException exception) onFailure,
-    R Function(T value) onSuccess,
-  ) =>
-      switch (this) {
-        UseCaseSuccess(:final value) => onSuccess(value),
-        UseCaseFailure(:final value) => onFailure(value),
-      };
+  R fold<R>(R Function(UseCaseException exception) onFailure, R Function(T value) onSuccess) => switch (this) {
+    UseCaseSuccess(:final value) => onSuccess(value),
+    UseCaseFailure(:final value) => onFailure(value),
+  };
 }
 
 /// A successful use case carrying a [value] of type [T].
@@ -42,8 +36,7 @@ final class UseCaseSuccess<T> extends UseCase<T> {
   const UseCaseSuccess(this.value);
 
   @override
-  bool operator ==(Object other) =>
-      other is UseCaseSuccess<T> && other.value == value;
+  bool operator ==(Object other) => other is UseCaseSuccess<T> && other.value == value;
 
   @override
   int get hashCode => value.hashCode;
@@ -58,8 +51,7 @@ final class UseCaseFailure<T> extends UseCase<T> {
   const UseCaseFailure(this.value);
 
   @override
-  bool operator ==(Object other) =>
-      other is UseCaseFailure<T> && other.value == value;
+  bool operator ==(Object other) => other is UseCaseFailure<T> && other.value == value;
 
   @override
   int get hashCode => value.hashCode;
@@ -89,6 +81,3 @@ UseCase<T> useCaseSync<T>(T Function() request) {
     return UseCaseFailure(UnexpectedUseCaseException(ex.toString(), st));
   }
 }
-
-/// Casts [x] to [T] if it is of that type, otherwise returns null.
-T? cast<T>(dynamic x) => x is T ? x : null;

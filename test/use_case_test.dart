@@ -1,5 +1,5 @@
-import 'package:use_case_dart/use_case.dart';
 import 'package:test/test.dart';
+import 'package:use_case_dart/use_case.dart';
 
 class _TestException extends UseCaseException {
   const _TestException(super.message);
@@ -32,10 +32,7 @@ void main() {
 
     test('value equality', () {
       expect(const UseCaseSuccess<int>(1), const UseCaseSuccess<int>(1));
-      expect(
-        const UseCaseSuccess<int>(1) == const UseCaseSuccess<int>(2),
-        isFalse,
-      );
+      expect(const UseCaseSuccess<int>(1) == const UseCaseSuccess<int>(2), isFalse);
     });
   });
 
@@ -78,20 +75,6 @@ void main() {
       final r = useCaseSync<int>(() => throw StateError('weird'));
       expect(r.failed, isTrue);
       expect(r.exception, isA<UnexpectedUseCaseException>());
-    });
-  });
-
-  group('cast', () {
-    test('returns value when type matches', () {
-      expect(cast<String>('hi'), 'hi');
-    });
-
-    test('returns null when type does not match', () {
-      expect(cast<int>('hi'), isNull);
-    });
-
-    test('returns null for null input', () {
-      expect(cast<int>(null), isNull);
     });
   });
 }
