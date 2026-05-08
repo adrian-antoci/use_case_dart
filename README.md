@@ -2,20 +2,13 @@
 
 Hello devs!
 
-I created this library to standardise the way to split business logic into 'use cases' that can be reused.
+I built this library to give business logic a consistent shape: small, reusable 'use cases' that drop into any UI.
 
-The way I use the library is mainly with Bloc, where I keep the UI logic in the Bloc and for anything else I create 'Use Cases'.
+I mainly pair it with Bloc: UI logic stays in the Bloc, everything else lives in a Use Case.
 
 Wrap any function call in a `UseCase<T>` so callers can branch on success or
 failure without try/catch noise, and so unexpected errors are funneled into a
 single `UnexpectedUseCaseException`.
-
-## Install
-
-```yaml
-dependencies:
-  use_case_dart: ^0.1.0
-```
 
 ## Usage
 
@@ -28,23 +21,14 @@ Define a use case as a class. Wrap the work in `useCase(...)` for async work or
 ```dart
 import 'package:use_case_dart/use_case.dart';
 
-class EmptyEmailException extends UseCaseException {
-  const EmptyEmailException() : super('email is empty');
-}
-
-/// An example of a use case I can use in multiple cubits
-class ValidateEmailUseCase {
-  UseCase<String> call(String input) => useCaseSync(() {
-        final trimmed = input.trim();
-        if (trimmed.isEmpty) throw const EmptyEmailException();
-        return trimmed.toLowerCase();
-      });
-}
-
+/// Define a use case like this:
 class LoginUseCase {
-  final AuthenticationService authService;
   const LoginUseCase(this.authService);
 
+  /// Declare your dependencies. In this example the service logs the user in.
+  final AuthenticationService authService;
+
+  /// Wrap your logic in `useCase` and return it as `UseCase<YourResult>`.
   Future<UseCase<LoginResult>> call({
     required String email,
     required String password,
@@ -52,29 +36,51 @@ class LoginUseCase {
       useCase(() => authService.login(email: email, password: password));
 }
 
+
+/// Another example — a synchronous use case that does not return a future.
+///
+/// Here there are no dependencies, just business logic.
+class ValidateEmailUseCase {
+  UseCase<String> call(String input) => useCaseSync(() {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) throw const EmptyEmailException();
+    return trimmed.toLowerCase();
+  });
+}
+
+/// Now let's put the use cases to work.
 class LoginPageCubit extends Cubit<LoginPageState> {
-  final ValidateEmailUseCase validateEmailUseCase;
+
+  /// Inject them like any other dependency.
   final LoginUseCase loginUseCase;
+  final ValidateEmailUseCase validateEmailUseCase;
 
   LoginPageCubit(this.validateEmailUseCase, this.loginUseCase)
       : super(LoginPageInitial());
 
+  /// Triggered when the user taps the login button.
   Future<void> onLoginTap({
     required String email,
     required String password,
   }) async {
+    /// Run the first use case.
     final emailResult = validateEmailUseCase(email);
+
+    /// Check the result and react accordingly.
     if (emailResult.failed) {
       emit(LoginPageError(emailResult.exception));
       return;
     }
 
     emit(LoginPageLoading());
+
+    /// Run the second use case — note the `await`.
     final result = await loginUseCase(
       email: emailResult.result,
       password: password,
     );
 
+    /// React to the result. No try/catch needed — `.succeeded` and `.failed` cover both paths.
     if (result.succeeded) {
       emit(LoginPageSuccess(result.result));
     } else {
@@ -82,6 +88,7 @@ class LoginPageCubit extends Cubit<LoginPageState> {
     }
   }
 }
+
 ```
 
 ## Extending `UseCaseException`
@@ -139,6 +146,13 @@ switch (result) {
   UseCaseSuccess(:final value) => print('welcome, token=${value.token}'),
   UseCaseFailure(:final value) => print('failed: $value'),
 }
+```
+
+## Install
+
+```yaml
+dependencies:
+  use_case_dart: ^0.1.0
 ```
 
 ## License
