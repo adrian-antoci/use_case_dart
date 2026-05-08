@@ -152,7 +152,7 @@ switch (result) {
 
 ```yaml
 dependencies:
-  use_case_dart: ^0.1.0
+  use_case_dart: ^1.0.2
 ```
 
 ## License
