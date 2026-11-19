@@ -10,19 +10,18 @@ class CredentialsException extends UseCaseException {
   const CredentialsException() : super('invalid credentials');
 }
 
-// A sync use case: trims/lowercases the email or throws a typed failure.
-class ValidateEmailUseCase {
-  UseCase<String> call(String input) => useCaseSync(() {
+// No dedicated use-case class. Service methods return UseCase directly.
+class AuthService {
+  // Sync: trims/lowercases the email or throws a typed failure.
+  UseCase<String> validateEmail(String input) => useCaseSync(() {
         final trimmed = input.trim();
         if (trimmed.isEmpty) throw const EmptyEmailException();
         return trimmed.toLowerCase();
       });
-}
 
-// An async use case: any thrown UseCaseException becomes a UseCaseFailure;
-// any other error is funneled into UnexpectedUseCaseException.
-class LoginUseCase {
-  Future<UseCase<String>> call({
+  // Async: any thrown UseCaseException becomes a UseCaseFailure;
+  // any other error is funneled into UnexpectedUseCaseException.
+  Future<UseCase<String>> login({
     required String email,
     required String password,
   }) =>
@@ -33,19 +32,18 @@ class LoginUseCase {
 }
 
 Future<void> main() async {
-  final validateEmail = ValidateEmailUseCase();
-  final login = LoginUseCase();
+  final auth = AuthService();
 
-  // Sync use case — short-circuit on failure.
-  final emailResult = validateEmail('  Ada@Example.com  ');
+  // Sync call — short-circuit on failure.
+  final emailResult = auth.validateEmail('  Ada@Example.com  ');
   if (emailResult.failed) {
     print('invalid email: ${emailResult.exception.message}');
     return;
   }
   print('normalized: ${emailResult.result}');
 
-  // Async use case — branch on succeeded / failed.
-  final result = await login(email: emailResult.result, password: 'hunter2');
+  // Async call — branch on succeeded / failed.
+  final result = await auth.login(email: emailResult.result, password: 'hunter2');
   if (result.succeeded) {
     print('logged in: ${result.result}');
   } else {
@@ -53,7 +51,7 @@ Future<void> main() async {
   }
 
   // Or pattern-match exhaustively over the sealed UseCase<T>.
-  final bad = await login(email: emailResult.result, password: 'wrong');
+  final bad = await auth.login(email: emailResult.result, password: 'wrong');
   switch (bad) {
     case UseCaseSuccess(:final value):
       print('unexpected success: $value');
